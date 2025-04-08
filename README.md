@@ -1,51 +1,117 @@
-# anime-recommendation-app
-# Welcome to your Expo app 👋
+Here's your **full updated `README.md`** including:
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+- ✅ `pnpm` installation
+- ✅ Monorepo setup
+- ✅ Frontend & backend instructions
+- ✅ Sample API route
+- ✅ Project structure
 
-## Get started
+---
 
-1. Install dependencies
+### 📄 Copy-paste `README.md`
 
-   ```bash
-   npm install
-   ```
+````md
+# 🧠 Anime Recommendation App (Monorepo)
 
-2. Start the app
+Welcome to the **Anime Recommendation App**, a full-stack TypeScript monorepo using:
 
-   ```bash
-    npx expo start
-   ```
+- 📱 **React Native + Expo Router** (`apps/mobile`)
+- 🔙 **Node.js + Express + TypeScript** (`apps/backend`)
+- 🚀 **pnpm + workspace monorepo** structure
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 📦 Prerequisites
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Make sure you have **Node.js (v18+ recommended)** installed.
 
-## Get a fresh project
-
-When you're ready, run:
+### Install `pnpm` (if not already installed)
 
 ```bash
-npm run reset-project
+npm install -g pnpm
+```
+````
+
+Learn more at: [https://pnpm.io](https://pnpm.io)
+
+---
+
+## 🧰 Getting Started
+
+### 1. Install dependencies
+
+```bash
+pnpm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+This installs all workspaces: `apps/backend`, `apps/mobile`, etc.
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+### 2. Start both frontend & backend (dev)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+pnpm dev
+```
 
-## Join the community
+> This runs both `expo start` and the Express API in parallel.
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 📱 Mobile App (Expo)
+
+To start only the mobile app:
+
+```bash
+pnpm --filter mobile dev
+```
+
+Open the app in:
+
+- [Expo Go](https://expo.dev/go)
+- Android emulator
+- iOS simulator
+- Web browser (`w` key)
+
+Expo uses file-based routing from the `app/` directory.
+
+---
+
+## 🔙 Backend API (Express + TypeScript)
+
+To start just the backend server:
+
+```bash
+pnpm --filter backend start:ts
+```
+
+Server runs on: [http://localhost:3000](http://localhost:3000)
+
+### Example Route:
+
+```
+GET /animes
+```
+
+Response:
+
+```json
+[
+  { "id": 1, "title": "Attack on Titan" },
+  { "id": 2, "title": "Jujutsu Kaisen" },
+  { "id": 3, "title": "Demon Slayer" }
+]
+```
+
+---
+
+## 📦 Project Structure
+
+```
+apps/
+├── mobile/    # React Native (Expo)
+└── backend/   # Node.js + Express
+
+packages/      # (optional) Shared types/utilities
+pnpm-workspace.yaml
+```
