@@ -1,5 +1,7 @@
-const express = require("express");
-const cors = require("cors");
+import express, { Request, Response } from "express";
+import cors from "cors";
+
+console.log("Starting Anime API...");
 
 const app = express();
 const PORT = 3000;
@@ -7,11 +9,11 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
+app.get("/", (_req: Request, res: Response) => {
   res.send("Anime API is running!");
 });
 
-app.get("/animes", (req, res) => {
+app.get("/animes", (_req: Request, res: Response) => {
   const animeList = [
     { id: 1, title: "Attack on Titan" },
     { id: 2, title: "Jujutsu Kaisen" },

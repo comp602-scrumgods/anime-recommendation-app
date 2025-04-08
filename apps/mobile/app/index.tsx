@@ -1,14 +1,27 @@
-import { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+  ListRenderItem,
+} from "react-native";
+
+interface Anime {
+  id: number;
+  title: string;
+}
 
 export default function HomeScreen() {
-  const [animeList, setAnimeList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [animeList, setAnimeList] = useState<Anime[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:3000/animes')
+    console.log("Fetching anime list from API...");
+    fetch("http://127.0.0.1:3000/animes")
       .then((res) => res.json())
-      .then((data) => {
+      .then((data: Anime[]) => {
         setAnimeList(data);
         setLoading(false);
       })
@@ -17,6 +30,10 @@ export default function HomeScreen() {
         setLoading(false);
       });
   }, []);
+
+  const renderItem: ListRenderItem<Anime> = ({ item }) => (
+    <Text style={styles.item}>• {item.title}</Text>
+  );
 
   return (
     <View style={styles.container}>
@@ -27,9 +44,8 @@ export default function HomeScreen() {
         <FlatList
           data={animeList}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <Text style={styles.item}>• {item.title}</Text>
-          )}
+          renderItem={renderItem}
+          style={{ pointerEvents: "auto" }}
         />
       )}
     </View>
@@ -41,11 +57,11 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 50,
     paddingHorizontal: 20,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   header: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
   },
   item: {
