@@ -1,16 +1,3 @@
-Here's your **full updated `README.md`** including:
-
-- ✅ `pnpm` installation
-- ✅ Monorepo setup
-- ✅ Frontend & backend instructions
-- ✅ Sample API route
-- ✅ Project structure
-
----
-
-### 📄 Copy-paste `README.md`
-
-````md
 # 🧠 Anime Recommendation App (Monorepo)
 
 Welcome to the **Anime Recommendation App**, a full-stack TypeScript monorepo using:
