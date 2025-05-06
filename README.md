@@ -31,6 +31,12 @@ We use **pnpm** to run it. Let’s get it going in a browser! 🚀
    pnpm install
    ```
 
+4. **Format Code**:
+
+   ```bash
+   pnpm format
+   ```
+
 # 🚀 Run the App
 
 **Start Backend**:

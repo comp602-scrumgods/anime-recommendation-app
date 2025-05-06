@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev:backend": "pnpm --filter backend dev",
-    "dev:mobile:web": "pnpm --filter mobile web"
+    "dev:mobile:web": "pnpm --filter mobile web",
+    "format": "npx prettier --write \"**/*.{ts,tsx}\""
   }
 }
