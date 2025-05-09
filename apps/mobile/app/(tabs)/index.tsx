@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import {
   View,
   Text,
@@ -6,17 +7,15 @@ import {
   StyleSheet,
   ActivityIndicator,
   ListRenderItem,
-  Platform,
+  ScrollView,
+  Image,
 } from "react-native";
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import TrendingCarousel from '@/components/TrendingCarousel';
 
 interface Anime {
   id: number;
   title: string;
+  popularity: number;
+  image: string;
 }
 
 export default function HomeScreen() {
@@ -25,7 +24,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     console.log("Fetching anime list from API...");
-    fetch("http://127.0.0.1:3000/animes")
+    fetch("http://localhost:3000/animes")
       .then((res) => res.json())
       .then((data: Anime[]) => {
         setAnimeList(data);
@@ -38,91 +37,105 @@ export default function HomeScreen() {
   }, []);
 
   const renderItem: ListRenderItem<Anime> = ({ item }) => (
-    <Text style={styles.item}>• {item.title}</Text>
+    <View style={styles.cardWrapper}>
+      <View style={styles.card}>
+        {item.image && (
+          <Image
+            source={{ uri: item.image }}
+            style={styles.cardImage}
+            resizeMode="cover"
+          />
+        )}
+      </View>
+      <Text style={styles.cardText} numberOfLines={2}>
+        {item.title}
+      </Text>
+    </View>
   );
 
+  const popularAnimeList = [...animeList].sort((a, b) => b.popularity - a.popularity);
+
   return (
-    <ParallaxScrollView>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
+    <ScrollView style={styles.container}>
+      <Text style={styles.pageTitle}>Home</Text>
 
-      {/* ✅ Carousel */}
-      <TrendingCarousel />
-
-      {/* 📡 Anime List */}
-      <View style={styles.listContainer}>
-        <Text style={styles.header}>📡 Anime List from API</Text>
-        {loading ? (
-          <ActivityIndicator size="large" color="#000" />
-        ) : (
+      {/* Trending Section */}
+      <Text style={styles.header}>📡 Trending</Text>
+      {loading ? (
+        <ActivityIndicator size="large" color="#000" />
+      ) : (
+        <View style={styles.horizontalList}>
           <FlatList
             data={animeList}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderItem}
+            horizontal
+            showsHorizontalScrollIndicator={true}
           />
-        )}
-      </View>
+        </View>
+      )}
 
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      {/* Popular Section */}
+      <Text style={styles.header}>🔥 Popular</Text>
+      {loading ? (
+        <ActivityIndicator size="large" color="#000" />
+      ) : (
+        <View style={styles.horizontalList}>
+          <FlatList
+            data={popularAnimeList}
+            keyExtractor={(item) => `popular-${item.id}`}
+            renderItem={renderItem}
+            horizontal
+            showsHorizontalScrollIndicator={true}
+          />
+        </View>
+      )}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
+    paddingTop: 50,
+    paddingHorizontal: 20,
+    backgroundColor: "#fff",
   },
-  listContainer: {
-    paddingHorizontal: 24,
-    marginTop: 20,
+  pageTitle: {
+    fontSize: 30,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "left",
   },
   header: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
   },
-  item: {
-    fontSize: 18,
-    marginVertical: 5,
+  horizontalList: {
+    height: 340,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-    paddingHorizontal: 24,
+  cardWrapper: {
+    marginRight: 10,
+    alignItems: "center",
+    width: 300,
+  },
+  card: {
+  backgroundColor: "#d2d3fa",
+  borderRadius: 10,
+  marginRight: 10,
+  width: 300,
+  height: 300,
+  overflow: "hidden",
+},
+  cardImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 10,
+  },
+  cardText: {
+    fontSize: 18,
+    fontWeight: "500",
+    marginTop: 8,
   },
 });
