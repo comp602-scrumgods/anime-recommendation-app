@@ -1,22 +1,22 @@
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { View, Text, TextInput, Button, StyleSheet } from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import { useState } from "react";
 
 export default function DetailsScreen() {
   const { id, title } = useLocalSearchParams<{ id?: string; title?: string }>();
 
   // State for editable fields
-  const [animeId, setAnimeId] = useState(id?.toString() || '');
-  const [animeTitle, setAnimeTitle] = useState(title?.toString() || '');
-  const [note, setNote] = useState('');
+  const [animeId, setAnimeId] = useState(id?.toString() || "");
+  const [animeTitle, setAnimeTitle] = useState(title?.toString() || "");
+  const [note, setNote] = useState("");
 
   const handleSaveNote = () => {
-    console.log('Saved Note:', {
+    console.log("Saved Note:", {
       animeId,
       animeTitle,
       note,
     });
-    alert('Note saved!');
+    alert("Note saved!");
   };
 
   return (
@@ -57,22 +57,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   label: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
     marginTop: 12,
     marginBottom: 4,
   },
   input: {
-    backgroundColor: '#1e1e1e',
-    color: '#fff',
+    backgroundColor: "#1e1e1e",
+    color: "#fff",
     borderWidth: 1,
-    borderColor: '#555',
+    borderColor: "#555",
     borderRadius: 8,
     padding: 10,
   },
 });
-
-

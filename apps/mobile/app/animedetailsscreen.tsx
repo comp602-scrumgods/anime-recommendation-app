@@ -1,5 +1,12 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
 
 export default function animedetailsscreen() {
   return (
@@ -34,13 +41,13 @@ export default function animedetailsscreen() {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: '#fff',
-    alignItems: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
-    alignSelf: 'flex-start',
+    fontWeight: "bold",
+    alignSelf: "flex-start",
     marginBottom: 10,
   },
   image: {
@@ -51,12 +58,12 @@ const styles = StyleSheet.create({
   },
   animeTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginVertical: 5,
   },
   ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
   },
   ratingText: {
@@ -64,24 +71,24 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   button: {
-    backgroundColor: 'black',
+    backgroundColor: "black",
     paddingVertical: 8,
     paddingHorizontal: 20,
     borderRadius: 20,
     marginBottom: 20,
   },
   buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
   },
   subHeading: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 10,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   recommendationRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
   },
   recommendationImage: {
