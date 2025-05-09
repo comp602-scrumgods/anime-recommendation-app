@@ -46,8 +46,17 @@ pnpm dev:backend
 ```
 
 - See: 🚀 Server is running at `http://localhost:3000`
-- Test: Open [http://localhost:3000/animes](http://localhost:3000/animes) in a browser.
-- Shows: `[{ "id": 1, "title": "Attack on Titan" }, ...]`
+- Test: Open [http://localhost:3000](http://localhost:3000) in a browser.
+- Shows: `Anime API is running!`
+
+**Start Frontend**:
+
+```bash
+pnpm dev:mobile:web
+```
+
+- See: 🚀 Server is running at `http://localhost:8081`
+- Test: Open [http://localhost:8081](http://localhost:8081/) in a browser.
 
 # 🖌️ Edit the App
 
