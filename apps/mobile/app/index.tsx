@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,13 @@ import {
   StyleSheet,
   ActivityIndicator,
   ListRenderItem,
+  ScrollView,
 } from "react-native";
 
 interface Anime {
   id: number;
   title: string;
+  popularity: number;
 }
 
 export default function HomeScreen() {
@@ -32,25 +34,55 @@ export default function HomeScreen() {
   }, []);
 
   const renderItem: ListRenderItem<Anime> = ({ item }) => (
-    <Text style={styles.item}>• {item.title}</Text>
+    <View style={styles.cardWrapper}>
+      <View style={styles.card}>
+      </View>
+      <Text style={styles.cardText} numberOfLines={2}> 
+        {item.title}
+      </Text>
+    </View>
   );
 
+  const popularAnimeList = [...animeList].sort((a, b) => b.popularity - a.popularity);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>📡 Anime List from API</Text>
+    <ScrollView style={styles.container}>
+      <Text style={styles.pageTitle}>Home</Text>
+  
+      {/* Trending Section */}
+      <Text style={styles.header}>📡 Trending</Text>
       {loading ? (
         <ActivityIndicator size="large" color="#000" />
       ) : (
-        <FlatList
-          data={animeList}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderItem}
-          style={{ pointerEvents: "auto" }}
-        />
+        <View style={styles.horizontalList}>
+          <FlatList
+            data={animeList}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderItem}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+          />
+        </View>
       )}
-    </View>
+  
+      {/* Popular Section */}
+      <Text style={styles.header}>🔥 Popular</Text>
+      {loading ? (
+        <ActivityIndicator size="large" color="#000" />
+      ) : (
+        <View style={styles.horizontalList}>
+          <FlatList
+            data={popularAnimeList} // or replace with a filtered/sorted array
+            keyExtractor={(item) => `popular-${item.id}`}
+            renderItem={renderItem}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+          />
+        </View>
+      )}
+    </ScrollView>
   );
-}
+}  
 
 const styles = StyleSheet.create({
   container: {
@@ -59,13 +91,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: "#fff",
   },
+  pageTitle: {
+    fontSize: 30,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "left", 
+  },
   header: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
   },
-  item: {
+  horizontalList: {
+    height: 340, 
+  },
+  cardWrapper: {
+    marginRight: 10,
+    alignItems: "center",
+    width: 300,
+  },
+  card: {
+    backgroundColor: "#d2d3fa",
+    padding: 20,
+    borderRadius: 10,
+    marginRight: 10,
+    width: 300,
+    height: 300,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  cardText: {
     fontSize: 18,
-    marginVertical: 5,
+    fontWeight: "500",
   },
 });
