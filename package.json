@@ -3,6 +3,8 @@
   "name": "anime-recommendation-monorepo",
   "version": "1.0.0",
   "scripts": {
-    "dev": "pnpm -r --parallel run dev"
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:mobile:web": "pnpm --filter mobile web",
+    "format": "npx prettier --write \"**/*.{ts,tsx}\""
   }
 }

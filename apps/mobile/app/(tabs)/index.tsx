@@ -1,27 +1,69 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+  ListRenderItem,
+  Platform,
+} from "react-native";
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import TrendingCarousel from '@/components/TrendingCarousel'; // 👈 Import your carousel
+import TrendingCarousel from '@/components/TrendingCarousel';
+
+interface Anime {
+  id: number;
+  title: string;
+}
 
 export default function HomeScreen() {
+  const [animeList, setAnimeList] = useState<Anime[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    console.log("Fetching anime list from API...");
+    fetch("http://127.0.0.1:3000/animes")
+      .then((res) => res.json())
+      .then((data: Anime[]) => {
+        setAnimeList(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("API error:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  const renderItem: ListRenderItem<Anime> = ({ item }) => (
+    <Text style={styles.item}>• {item.title}</Text>
+  );
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
+    <ParallaxScrollView>
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
       </ThemedView>
 
-      {/* ✅ Insert your carousel here */}
+      {/* ✅ Carousel */}
       <TrendingCarousel />
+
+      {/* 📡 Anime List */}
+      <View style={styles.listContainer}>
+        <Text style={styles.header}>📡 Anime List from API</Text>
+        {loading ? (
+          <ActivityIndicator size="large" color="#000" />
+        ) : (
+          <FlatList
+            data={animeList}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderItem}
+          />
+        )}
+      </View>
 
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
@@ -62,19 +104,25 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    marginTop: 32,
+    paddingHorizontal: 24,
+  },
+  listContainer: {
+    paddingHorizontal: 24,
+    marginTop: 20,
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  item: {
+    fontSize: 18,
+    marginVertical: 5,
   },
   stepContainer: {
     gap: 8,
     marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+    paddingHorizontal: 24,
   },
 });

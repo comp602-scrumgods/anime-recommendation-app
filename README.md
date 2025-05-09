@@ -1,104 +1,86 @@
-# 🧠 Anime Recommendation App (Monorepo)
+# Anime Recommendation App 🎬
 
-Welcome to the **Anime Recommendation App**, a full-stack TypeScript monorepo using:
+Hi team! This is our **Anime Recommendation App**! It has:
 
-- 📱 **React Native + Expo Router** (`apps/mobile`)
-- 🔙 **Node.js + Express + TypeScript** (`apps/backend`)
-- 🚀 **pnpm + workspace monorepo** structure
+- 🌐 **Backend**: Node.js API with anime data (e.g., `Attack on Titan`).
+- 📱 **Frontend**: React Native/Expo app showing the anime list in a browser.
 
----
+We use **pnpm** to run it. Let’s get it going in a browser! 🚀
 
-## 📦 Prerequisites
+# 🛠️ Quick Setup
 
-Make sure you have **Node.js (v18+ recommended)** installed.
+1. **Install Tools**:
 
-### Install `pnpm` (if not already installed)
+   - **Node.js** (v20): [Download](https://nodejs.org) (LTS version).
+     - Check: `node --version`
+   - **pnpm**: Run `npm install -g pnpm`.
+     - Check: `pnpm --version`
+   - **Expo CLI**: Run `pnpm add -g expo-cli`.
+     - Check: `expo --version`
 
-```bash
-npm install -g pnpm
-```
-````
+2. **Get the Code**:
 
-Learn more at: [https://pnpm.io](https://pnpm.io)
+   ```bash
+   git clone https://github.com/comp602-scrumgods/anime-recommendation-app.git
+   cd anime-recommendation-app
+   ```
 
----
+3. **Install Dependencies**:
 
-## 🧰 Getting Started
+   ```bash
+   pnpm install
+   ```
 
-### 1. Install dependencies
+4. **Format Code**:
 
-```bash
-pnpm install
-```
+   ```bash
+   pnpm format
+   ```
 
-This installs all workspaces: `apps/backend`, `apps/mobile`, etc.
+# 🚀 Run the App
 
----
-
-### 2. Start both frontend & backend (dev)
-
-```bash
-pnpm dev
-```
-
-> This runs both `expo start` and the Express API in parallel.
-
----
-
-## 📱 Mobile App (Expo)
-
-To start only the mobile app:
+**Start Backend**:
 
 ```bash
-pnpm --filter mobile dev
+pnpm dev:backend
 ```
 
-Open the app in:
+- See: 🚀 Server is running at `http://localhost:3000`
+- Test: Open [http://localhost:3000/animes](http://localhost:3000/animes) in a browser.
+- Shows: `[{ "id": 1, "title": "Attack on Titan" }, ...]`
 
-- [Expo Go](https://expo.dev/go)
-- Android emulator
-- iOS simulator
-- Web browser (`w` key)
+# 🖌️ Edit the App
 
-Expo uses file-based routing from the `app/` directory.
+- **Backend**: Edit `apps/backend/src/index.ts`.
+  - Add a new API route, e.g., `/hello`.
+- **Frontend**: Edit `apps/mobile/app/HomeScreen.tsx`.
+  - Change colors or add buttons.
+- Changes show up in the browser instantly! ✨
 
----
+# 🐛 Fix Problems
 
-## 🔙 Backend API (Express + TypeScript)
+### Backend Error
 
-To start just the backend server:
+- If `dist/index.js` missing:
 
-```bash
-pnpm --filter backend start:ts
-```
+  ```bash
+  pnpm --filter backend build
+  pnpm dev:backend
+  ```
 
-Server runs on: [http://localhost:3000](http://localhost:3000)
+### Frontend Error
 
-### Example Route:
+- If web doesn’t load:
 
-```
-GET /animes
-```
+  ```bash
+  cd apps/mobile
+  pnpm dev:mobile:web --clear
+  rm -rf .expo
+  cd ../..
+  pnpm install
+  ```
 
-Response:
+### Anime List Not Showing
 
-```json
-[
-  { "id": 1, "title": "Attack on Titan" },
-  { "id": 2, "title": "Jujutsu Kaisen" },
-  { "id": 3, "title": "Demon Slayer" }
-]
-```
-
----
-
-## 📦 Project Structure
-
-```
-apps/
-├── mobile/    # React Native (Expo)
-└── backend/   # Node.js + Express
-
-packages/      # (optional) Shared types/utilities
-pnpm-workspace.yaml
-```
+- Ensure backend is running (`pnpm dev:backend`).
+- Check browser console (F12) for errors.
