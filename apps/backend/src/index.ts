@@ -9,7 +9,6 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
-
 app.get("/", (_req: Request, res: Response) => {
   res.send("Anime API is running!");
 });
@@ -24,10 +23,10 @@ app.get("/animes", (_req: Request, res: Response) => {
     { id: 6, title: "Bleach", popularity: 1199405 },
     { id: 7, title: "Akame ga Kill!", popularity: 1363471 },
     { id: 8, title: "Death Note", popularity: 2872509 },
-    { id: 9, title: "Dr. Stone", popularity: 1119653  },
+    { id: 9, title: "Dr. Stone", popularity: 1119653 },
     { id: 10, title: "Horimiya", popularity: 917496 },
     { id: 11, title: "Salaryman's Club", popularity: 30683 },
-    { id: 12, title: "Tokyo Ghoul", popularity: 1935573  },
+    { id: 12, title: "Tokyo Ghoul", popularity: 1935573 },
     { id: 13, title: "Spy X Family", popularity: 1067405 },
     { id: 14, title: "One Piece", popularity: 1435869 },
   ];
