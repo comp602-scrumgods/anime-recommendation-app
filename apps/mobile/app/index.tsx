@@ -1,4 +1,5 @@
-import { useEffect, useState, } from "react";
+import { useEffect, useState } from "react";
+
 import {
   View,
   Text,
@@ -7,12 +8,14 @@ import {
   ActivityIndicator,
   ListRenderItem,
   ScrollView,
+  Image,
 } from "react-native";
 
 interface Anime {
   id: number;
   title: string;
   popularity: number;
+  image: string;
 }
 
 export default function HomeScreen() {
@@ -21,7 +24,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     console.log("Fetching anime list from API...");
-    fetch("http://127.0.0.1:3000/animes")
+    fetch("http://localhost:3000/animes")
       .then((res) => res.json())
       .then((data: Anime[]) => {
         setAnimeList(data);
@@ -36,8 +39,15 @@ export default function HomeScreen() {
   const renderItem: ListRenderItem<Anime> = ({ item }) => (
     <View style={styles.cardWrapper}>
       <View style={styles.card}>
+        {item.image && (
+          <Image
+            source={{ uri: item.image }}
+            style={styles.cardImage}
+            resizeMode="cover"
+          />
+        )}
       </View>
-      <Text style={styles.cardText} numberOfLines={2}> 
+      <Text style={styles.cardText} numberOfLines={2}>
         {item.title}
       </Text>
     </View>
@@ -48,7 +58,7 @@ export default function HomeScreen() {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.pageTitle}>Home</Text>
-  
+
       {/* Trending Section */}
       <Text style={styles.header}>📡 Trending</Text>
       {loading ? (
@@ -60,11 +70,11 @@ export default function HomeScreen() {
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderItem}
             horizontal
-            showsHorizontalScrollIndicator={false}
+            showsHorizontalScrollIndicator={true}
           />
         </View>
       )}
-  
+
       {/* Popular Section */}
       <Text style={styles.header}>🔥 Popular</Text>
       {loading ? (
@@ -72,17 +82,17 @@ export default function HomeScreen() {
       ) : (
         <View style={styles.horizontalList}>
           <FlatList
-            data={popularAnimeList} // or replace with a filtered/sorted array
+            data={popularAnimeList}
             keyExtractor={(item) => `popular-${item.id}`}
             renderItem={renderItem}
             horizontal
-            showsHorizontalScrollIndicator={false}
+            showsHorizontalScrollIndicator={true}
           />
         </View>
       )}
     </ScrollView>
   );
-}  
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -95,7 +105,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "bold",
     marginBottom: 10,
-    textAlign: "left", 
+    textAlign: "left",
   },
   header: {
     fontSize: 24,
@@ -103,7 +113,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   horizontalList: {
-    height: 340, 
+    height: 340,
   },
   cardWrapper: {
     marginRight: 10,
@@ -111,18 +121,21 @@ const styles = StyleSheet.create({
     width: 300,
   },
   card: {
-    backgroundColor: "#d2d3fa",
-    padding: 20,
+  backgroundColor: "#d2d3fa",
+  borderRadius: 10,
+  marginRight: 10,
+  width: 300,
+  height: 300,
+  overflow: "hidden",
+},
+  cardImage: {
+    width: "100%",
+    height: "100%",
     borderRadius: 10,
-    marginRight: 10,
-    width: 300,
-    height: 300,
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
   },
   cardText: {
     fontSize: 18,
     fontWeight: "500",
+    marginTop: 8,
   },
 });
