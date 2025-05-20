@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
+  User,
 } from "firebase/auth";
 import { auth } from "../firebase";
 
@@ -21,6 +22,15 @@ export default function AuthScreen() {
   const [password, setPassword] = useState<string>("");
   const [isRegisterMode, setIsRegisterMode] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [user, setUser] = useState<User | null>(null);
+
+  // Listen for auth state changes to update the UI
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+      setUser(currentUser);
+    });
+    return unsubscribe;
+  }, []);
 
   const handleLogin = async () => {
     setError("");
@@ -66,7 +76,7 @@ export default function AuthScreen() {
   };
 
   // If user is logged in, show logout button
-  if (auth.currentUser) {
+  if (user) {
     return (
       <View style={styles.container}>
         <Text style={styles.header}>You are logged in</Text>
