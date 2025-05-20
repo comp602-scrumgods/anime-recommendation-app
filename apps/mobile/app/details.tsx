@@ -11,13 +11,16 @@ import {
 import { FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import useAniListApi from "../hooks/useAniListApi";
+import useFavorites from "../hooks/useFavorites";
 import { RootStackParamList } from "../types/navigation";
 import { NavigationProp } from "@react-navigation/native";
+import { auth } from "../firebase";
+import LoginPromptModal from "../components/Modals/LoginPromptModal";
 
 interface Anime {
   id: number;
   title: { romaji: string };
-  coverImage: { large: string; extraLarge: string };
+  coverImage: { extraLarge: string };
   averageScore: number;
   genres: string[];
   description: string;
@@ -37,7 +40,19 @@ export default function DetailsScreen() {
   const [anime, setAnime] = useState<Anime | null>(null);
   const [showDescription, setShowDescription] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const { fetchAnimeById, loading, error } = useAniListApi();
+  const [modalVisible, setModalVisible] = useState(false);
+  const {
+    fetchAnimeById,
+    loading: animeLoading,
+    error: animeError,
+  } = useAniListApi();
+  const {
+    favorites,
+    fetchFavorites,
+    addFavorite,
+    removeFavorite,
+    loading: favoritesLoading,
+  } = useFavorites();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   useEffect(() => {
@@ -48,11 +63,30 @@ export default function DetailsScreen() {
       }
       const data = await fetchAnimeById(parseInt(id), true);
       setAnime(data);
+
+      if (auth.currentUser) {
+        await fetchFavorites(auth.currentUser.email!);
+      }
     };
     fetchDetails();
   }, [id]);
 
-  if (loading) {
+  const handleToggleFavorite = async () => {
+    if (!auth.currentUser) {
+      setModalVisible(true);
+      return;
+    }
+
+    const animeId = parseInt(id!);
+    if (favorites.some((fav) => fav.id === animeId)) {
+      await removeFavorite(auth.currentUser.email!, animeId);
+    } else {
+      await addFavorite(auth.currentUser.email!, animeId);
+    }
+  };
+
+  // Wait for both anime and favorites to load before rendering the main UI
+  if (animeLoading || favoritesLoading) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#ff6f61" />
@@ -60,15 +94,17 @@ export default function DetailsScreen() {
     );
   }
 
-  if (error || validationError || !anime) {
+  if (animeError || validationError || !anime) {
     return (
       <View style={styles.container}>
         <Text style={styles.errorText}>
-          {error || validationError || "Anime not found."}
+          {animeError || validationError || "Anime not found."}
         </Text>
       </View>
     );
   }
+
+  const isFavorite = favorites.some((fav) => fav.id === parseInt(id || "0"));
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -88,6 +124,30 @@ export default function DetailsScreen() {
           {(anime.averageScore / 10).toFixed(1)} | {anime.genres.join(", ")}
         </Text>
       </View>
+
+      <TouchableOpacity
+        style={[
+          styles.favoriteButton,
+          isFavorite ? styles.removeFavoriteButton : styles.addFavoriteButton,
+        ]}
+        onPress={handleToggleFavorite}
+      >
+        <FontAwesome
+          name={isFavorite ? "heart" : "heart-o"}
+          size={20}
+          color={isFavorite ? "#fff" : "#ff6f61"}
+          style={styles.favoriteIcon}
+        />
+        <Text
+          style={
+            styles.favoriteButtonText && {
+              color: isFavorite ? "#fff" : "#ff6f61",
+            }
+          }
+        >
+          {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+        </Text>
+      </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.button}
@@ -133,6 +193,12 @@ export default function DetailsScreen() {
           <Text style={styles.noDataText}>No recommendations available.</Text>
         )}
       </View>
+
+      <LoginPromptModal
+        text="Login to save your favourite anime"
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+      />
     </ScrollView>
   );
 }
@@ -179,6 +245,34 @@ const styles = StyleSheet.create({
     color: "#555",
     marginLeft: 8,
     fontWeight: "500",
+  },
+  favoriteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    marginBottom: 20,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  addFavoriteButton: {
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "#ff6f61",
+  },
+  removeFavoriteButton: {
+    backgroundColor: "#ff6f61",
+  },
+  favoriteIcon: {
+    marginRight: 8,
+  },
+  favoriteButtonText: {
+    fontWeight: "600",
+    fontSize: 16,
+    textAlign: "center",
   },
   button: {
     backgroundColor: "#ff6f61",
