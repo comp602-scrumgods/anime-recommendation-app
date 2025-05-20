@@ -6,6 +6,7 @@ export type RootStackParamList = {
   details: { id: string };
   explore: undefined;
   favourites: undefined;
+  auth: undefined;
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> = {

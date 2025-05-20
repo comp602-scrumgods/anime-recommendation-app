@@ -117,8 +117,6 @@ const useAniListApi = () => {
         variables,
       });
 
-      console.log("API Response:", JSON.stringify(response.data, null, 2));
-
       const data = response.data.data.Page.media;
       if (!data || data.length === 0) {
         setError("No anime found for the given parameters.");
