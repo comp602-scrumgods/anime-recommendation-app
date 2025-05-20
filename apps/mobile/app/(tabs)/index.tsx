@@ -12,11 +12,13 @@ import {
 } from "react-native";
 import { useNavigation } from "expo-router";
 import useAniListApi from "../../hooks/useAniListApi";
+import { RootStackParamList } from "../../types/navigation";
+import { NavigationProp } from "@react-navigation/native";
 
 interface Anime {
   id: number;
   title: { romaji: string };
-  coverImage: { extraLarge: string };
+  coverImage?: { extraLarge: string };
   popularity: number;
   trending?: number;
 }
@@ -25,7 +27,7 @@ export default function HomeScreen() {
   const [trendingAnime, setTrendingAnime] = useState<Anime[]>([]);
   const [popularAnime, setPopularAnime] = useState<Anime[]>([]);
   const { fetchAnimeByQuery, loading, error } = useAniListApi();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   useEffect(() => {
     const loadAnime = async () => {
@@ -45,9 +47,7 @@ export default function HomeScreen() {
 
   const renderItem: ListRenderItem<Anime> = ({ item }) => (
     <TouchableOpacity
-      onPress={
-        () => console.log("Anime ID:", item.id) // TODO: Navigate to anime details screen
-      }
+      onPress={() => navigation.navigate("details", { id: item.id.toString() })}
     >
       <View style={styles.cardWrapper}>
         {item.coverImage?.extraLarge ? (

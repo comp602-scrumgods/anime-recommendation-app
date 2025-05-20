@@ -40,7 +40,7 @@ const useAniListApi = () => {
                   mediaRecommendation {
                     id
                     title { romaji }
-                    coverImage { medium }
+                    coverImage { extraLarge }
                   }
                 }
               }
