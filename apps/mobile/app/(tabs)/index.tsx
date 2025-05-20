@@ -7,57 +7,84 @@ import {
   ActivityIndicator,
   ListRenderItem,
   ScrollView,
+  Image,
+  TouchableOpacity,
 } from "react-native";
+import { useNavigation } from "expo-router";
+import useAniListApi from "../../hooks/useAniListApi";
 
 interface Anime {
   id: number;
-  title: string;
+  title: { romaji: string };
+  coverImage: { extraLarge: string };
   popularity: number;
+  trending?: number;
 }
 
 export default function HomeScreen() {
-  const [animeList, setAnimeList] = useState<Anime[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [trendingAnime, setTrendingAnime] = useState<Anime[]>([]);
+  const [popularAnime, setPopularAnime] = useState<Anime[]>([]);
+  const { fetchAnimeByQuery, loading, error } = useAniListApi();
+  const navigation = useNavigation();
 
   useEffect(() => {
-    console.log("Fetching anime list from API...");
-    fetch("http://127.0.0.1:3000/animes")
-      .then((res) => res.json())
-      .then((data: Anime[]) => {
-        setAnimeList(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("API error:", err);
-        setLoading(false);
-      });
+    const loadAnime = async () => {
+      const trending = await fetchAnimeByQuery({ sort: ["TRENDING_DESC"] });
+      const popular = await fetchAnimeByQuery({ sort: ["POPULARITY_DESC"] });
+      setTrendingAnime(trending);
+      setPopularAnime(popular);
+
+      console.log("Trending Anime:", trending);
+      console.log("Popular Anime:", popular);
+    };
+
+    (async () => {
+      await loadAnime();
+    })();
   }, []);
 
   const renderItem: ListRenderItem<Anime> = ({ item }) => (
-    <View style={styles.cardWrapper}>
-      <View style={styles.card}></View>
-      <Text style={styles.cardText} numberOfLines={2}>
-        {item.title}
-      </Text>
-    </View>
-  );
-
-  const popularAnimeList = [...animeList].sort(
-    (a, b) => b.popularity - a.popularity
+    <TouchableOpacity
+      onPress={
+        () => console.log("Anime ID:", item.id) // TODO: Navigate to anime details screen
+      }
+    >
+      <View style={styles.cardWrapper}>
+        {item.coverImage?.extraLarge ? (
+          <Image
+            source={{ uri: item.coverImage.extraLarge }}
+            style={styles.card}
+            onError={(e) =>
+              console.log("Image load error:", e.nativeEvent.error)
+            }
+          />
+        ) : (
+          <View style={[styles.card, styles.placeholderImage]}>
+            <Text style={styles.placeholderText}>No Image</Text>
+          </View>
+        )}
+        <Text style={styles.cardText} numberOfLines={2}>
+          {item.title.romaji}
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.pageTitle}>Home</Text>
 
-      {/* Trending Section */}
       <Text style={styles.header}>📡 Trending</Text>
       {loading ? (
         <ActivityIndicator size="large" color="#000" />
+      ) : error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : trendingAnime.length === 0 ? (
+        <Text style={styles.noDataText}>No trending anime found.</Text>
       ) : (
         <View style={styles.horizontalList}>
           <FlatList
-            data={animeList}
+            data={trendingAnime}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderItem}
             horizontal
@@ -66,14 +93,17 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Popular Section */}
       <Text style={styles.header}>🔥 Popular</Text>
       {loading ? (
         <ActivityIndicator size="large" color="#000" />
+      ) : error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : popularAnime.length === 0 ? (
+        <Text style={styles.noDataText}>No popular anime found.</Text>
       ) : (
         <View style={styles.horizontalList}>
           <FlatList
-            data={popularAnimeList} // or replace with a filtered/sorted array
+            data={popularAnime}
             keyExtractor={(item) => `popular-${item.id}`}
             renderItem={renderItem}
             horizontal
@@ -122,8 +152,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
   },
+  placeholderImage: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  placeholderText: {
+    color: "#666",
+    fontSize: 16,
+  },
   cardText: {
     fontSize: 18,
     fontWeight: "500",
+    textAlign: "center",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  noDataText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
   },
 });
