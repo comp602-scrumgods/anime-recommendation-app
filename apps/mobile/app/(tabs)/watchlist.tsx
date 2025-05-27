@@ -1,12 +1,28 @@
+import { useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { getWatchlist, removeFromWatchlist } from "@/utils/watchlist";
 
 export default function WatchListScreen() {
-  const completedAnime = ["Dragon Ball Diama", "Naruto"]; // Replace with state/storage later
+  const [watchlist, setWatchlist] = useState<any[]>([]);
+
+  const load = async () => {
+    const list = await getWatchlist();
+    setWatchlist(list);
+  };
+
+  useEffect(() => {
+    const unsubscribe = load();
+    return () => unsubscribe;
+  }, []);
+
+  const handleRemove = async (id: number) => {
+    await removeFromWatchlist(id);
+    load();
+  };
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Ionicons name="chevron-back" size={24} />
         <Text style={styles.headerTitle}>Watch List</Text>
@@ -17,59 +33,44 @@ export default function WatchListScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.sectionTitle}>Completed</Text>
-        {completedAnime.map((anime, index) => (
-          <TouchableOpacity key={index} style={styles.tag}>
-            <Text style={styles.tagText}>{anime}</Text>
-          </TouchableOpacity>
-        ))}
+        {watchlist.length === 0 ? (
+          <Text style={styles.empty}>Your watch list is empty.</Text>
+        ) : (
+          watchlist.map((anime, index) => (
+            <TouchableOpacity key={index} style={styles.tag}>
+              <Text style={styles.tagText}>{anime.title.romaji}</Text>
+              <Ionicons
+                name="close"
+                size={16}
+                color="white"
+                style={{ marginLeft: 8 }}
+                onPress={() => handleRemove(anime.id)}
+              />
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    paddingTop: 50,
-    paddingHorizontal: 20,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  saveText: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  scroll: {
-    gap: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
+  container: { flex: 1, backgroundColor: "#fff", paddingTop: 50, paddingHorizontal: 20 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
+  headerTitle: { fontSize: 20, fontWeight: "bold" },
+  headerRight: { flexDirection: "row", alignItems: "center", gap: 10 },
+  saveText: { fontSize: 16, fontWeight: "500" },
+  scroll: { gap: 20 },
+  sectionTitle: { fontSize: 16, fontWeight: "600" },
+  empty: { fontSize: 16, color: "#888" },
   tag: {
     backgroundColor: "#000",
     borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: 8,
     alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
   },
-  tagText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
+  tagText: { color: "#fff", fontWeight: "600" },
 });

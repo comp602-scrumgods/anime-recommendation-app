@@ -14,6 +14,7 @@ import { useNavigation } from "expo-router";
 import useAniListApi from "../../hooks/useAniListApi";
 import { RootStackParamList } from "../../types/navigation";
 import { NavigationProp } from "@react-navigation/native";
+import { addToWatchlist } from "@/utils/watchlist"; // 👈 Added this import
 
 interface Anime {
   id: number;
@@ -35,9 +36,6 @@ export default function HomeScreen() {
       const popular = await fetchAnimeByQuery({ sort: ["POPULARITY_DESC"] });
       setTrendingAnime(trending);
       setPopularAnime(popular);
-
-      console.log("Trending Anime:", trending);
-      console.log("Popular Anime:", popular);
     };
 
     (async () => {
@@ -66,6 +64,11 @@ export default function HomeScreen() {
         <Text style={styles.cardText} numberOfLines={2}>
           {item.title.romaji}
         </Text>
+
+        {/* 👇 Add to Watchlist Button */}
+        <TouchableOpacity onPress={() => addToWatchlist(item)}>
+          <Text style={styles.addButton}>+ Add to Watchlist</Text>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -134,7 +137,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   horizontalList: {
-    height: 340,
+    height: 370,
   },
   cardWrapper: {
     marginRight: 10,
@@ -164,6 +167,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "500",
     textAlign: "center",
+    marginTop: 10,
+  },
+  addButton: {
+    fontSize: 14,
+    color: "#007AFF",
+    marginTop: 6,
   },
   errorText: {
     color: "red",
@@ -178,3 +187,4 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 });
+
