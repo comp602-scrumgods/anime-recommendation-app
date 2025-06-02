@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { getWatchlist, removeFromWatchlist } from "@/utils/watchlist";
+import { getWatchlist, removeFromWatchlist } from "../utils/watchlist";
 
 export default function WatchListScreen() {
   const [watchlist, setWatchlist] = useState<any[]>([]);
@@ -12,8 +18,7 @@ export default function WatchListScreen() {
   };
 
   useEffect(() => {
-    const unsubscribe = load();
-    return () => unsubscribe;
+    load();
   }, []);
 
   const handleRemove = async (id: number) => {
@@ -55,8 +60,18 @@ export default function WatchListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", paddingTop: 50, paddingHorizontal: 20 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    paddingTop: 50,
+    paddingHorizontal: 20,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
   headerTitle: { fontSize: 20, fontWeight: "bold" },
   headerRight: { flexDirection: "row", alignItems: "center", gap: 10 },
   saveText: { fontSize: 16, fontWeight: "500" },
