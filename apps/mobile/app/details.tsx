@@ -7,11 +7,14 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
+  TextInput,
+  FlatList,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import useAniListApi from "../hooks/useAniListApi";
 import useFavorites from "../hooks/useFavorites";
+import useComments from "../hooks/useComments";
 import { RootStackParamList } from "../types/navigation";
 import { NavigationProp } from "@react-navigation/native";
 import { auth } from "../firebase";
@@ -35,12 +38,23 @@ interface Recommendation {
   };
 }
 
-export default function DetailsScreen() {
+interface Comment {
+  id: string;
+  userEmail: string;
+  text: string;
+  timestamp: string;
+}
+
+export default function CommentsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [anime, setAnime] = useState<Anime | null>(null);
   const [showDescription, setShowDescription] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [commentText, setCommentText] = useState<string>("");
+
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
   const {
     fetchAnimeById,
     loading: animeLoading,
@@ -53,7 +67,14 @@ export default function DetailsScreen() {
     removeFavorite,
     loading: favoritesLoading,
   } = useFavorites();
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {
+    comments,
+    fetchAllComments,
+    addComment,
+    deleteComment,
+    loading: commentsLoading,
+    error: commentsError,
+  } = useComments();
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -67,9 +88,11 @@ export default function DetailsScreen() {
       if (auth.currentUser) {
         await fetchFavorites(auth.currentUser.email!);
       }
+      await fetchAllComments();
     };
+
     fetchDetails();
-  }, [id]);
+  }, []);
 
   const handleToggleFavorite = async () => {
     if (!auth.currentUser) {
@@ -85,8 +108,37 @@ export default function DetailsScreen() {
     }
   };
 
-  // Wait for both anime and favorites to load before rendering the main UI
-  if (animeLoading || favoritesLoading) {
+  const handleAddComment = async () => {
+    if (!auth.currentUser) {
+      setModalVisible(true);
+      return;
+    }
+
+    if (!commentText.trim()) return;
+
+    const success = await addComment(
+      parseInt(id!),
+      auth.currentUser.email!,
+      commentText
+    );
+    if (success) {
+      setCommentText("");
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!auth.currentUser) {
+      setModalVisible(true);
+      return;
+    }
+
+    const success = await deleteComment(commentId, auth.currentUser.email!);
+    if (!success) {
+      console.log("Failed to delete comment");
+    }
+  };
+
+  if (animeLoading || favoritesLoading || commentsLoading) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#ff6f61" />
@@ -100,6 +152,14 @@ export default function DetailsScreen() {
         <Text style={styles.errorText}>
           {animeError || validationError || "Anime not found."}
         </Text>
+      </View>
+    );
+  }
+
+  if (auth.currentUser && commentsError) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>{commentsError}</Text>
       </View>
     );
   }
@@ -162,6 +222,74 @@ export default function DetailsScreen() {
         <Text style={styles.description}>{anime.description}</Text>
       )}
 
+      <Text style={styles.subHeading}>Comments</Text>
+
+      <View style={styles.commentInputContainer}>
+        <TextInput
+          style={styles.commentInput}
+          placeholder={
+            auth.currentUser ? "Add a comment..." : "Login to Post..."
+          }
+          value={commentText}
+          onChangeText={setCommentText}
+          multiline
+          onSubmitEditing={
+            auth.currentUser ? handleAddComment : () => setModalVisible(true)
+          } // Post on Enter
+          blurOnSubmit={false} // Keep keyboard open after submission
+          returnKeyType="done" // Show "Done" on the keyboard
+        />
+        {auth.currentUser ? (
+          <TouchableOpacity
+            style={styles.commentButton}
+            onPress={handleAddComment}
+          >
+            <Text style={styles.commentButtonText}>Post</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.commentButton}
+            onPress={() => setModalVisible(true)}
+          >
+            <Text style={styles.commentButtonText}>Login to Post</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <FlatList
+        data={comments}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item, index }) => (
+          <View
+            style={[
+              styles.commentCard,
+              index % 2 === 0 ? styles.commentCardEven : styles.commentCardOdd,
+            ]}
+          >
+            <View style={styles.commentHeader}>
+              <Text style={styles.commentUser}>{item.userEmail}</Text>
+              {auth.currentUser &&
+                auth.currentUser.email === item.userEmail && (
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDeleteComment(item.id)}
+                  >
+                    <FontAwesome name="trash" size={18} color="#ff4444" />
+                  </TouchableOpacity>
+                )}
+            </View>
+            <Text style={styles.commentText}>{item.text}</Text>
+            <Text style={styles.commentTimestamp}>{item.timestamp}</Text>
+          </View>
+        )}
+        ListEmptyComponent={
+          <Text style={styles.noDataText}>
+            No comments yet. Be the first to comment!
+          </Text>
+        }
+        style={styles.commentList}
+      />
+
       <Text style={styles.subHeading}>You might also Like</Text>
 
       <View style={styles.recommendationRow}>
@@ -195,7 +323,7 @@ export default function DetailsScreen() {
       </View>
 
       <LoginPromptModal
-        text="Login to save your favourite anime"
+        text="Login to save your favourite anime or add comments"
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
       />
@@ -357,5 +485,88 @@ const styles = StyleSheet.create({
     color: "#888",
     textAlign: "center",
     fontStyle: "italic",
+  },
+  commentInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 20,
+  },
+  commentInput: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 10,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    marginRight: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  commentButton: {
+    backgroundColor: "#ff6f61",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    shadowColor: "#ff6f61",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  commentButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  commentList: {
+    width: "100%",
+  },
+  commentCard: {
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  commentCardEven: {
+    backgroundColor: "#e6f0fa",
+  },
+  commentCardOdd: {
+    backgroundColor: "#fbedfc",
+  },
+  commentHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 5,
+  },
+  commentUser: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+  },
+  commentText: {
+    fontSize: 16,
+    color: "#333",
+    marginBottom: 5,
+  },
+  commentTimestamp: {
+    fontSize: 12,
+    color: "#888",
+    fontStyle: "italic",
+    textAlign: "right",
+  },
+  deleteButton: {
+    padding: 5,
   },
 });
