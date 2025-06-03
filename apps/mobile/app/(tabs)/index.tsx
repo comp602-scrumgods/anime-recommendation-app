@@ -9,6 +9,8 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  Alert,
+  Modal,
 } from "react-native";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
@@ -20,6 +22,7 @@ import { auth } from "../../firebase";
 import LoginPromptModal from "@/components/Modals/LoginPromptModal";
 import { addToWatchlist } from "../utils/watchlist";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // ✅ clear storage import
+import Clipboard from "@react-native-clipboard/clipboard";
 
 interface Anime {
   id: number;
@@ -33,6 +36,8 @@ export default function HomeScreen() {
   const [trendingAnime, setTrendingAnime] = useState<Anime[]>([]);
   const [popularAnime, setPopularAnime] = useState<Anime[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [copyPopupVisible, setCopyPopupVisible] = useState(false);
+
   const {
     fetchAnimeByQuery,
     loading: animeLoading,
@@ -47,7 +52,7 @@ export default function HomeScreen() {
   } = useFavorites();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  const SHOW_CLEAR_BUTTON = false; // ✅ toggle flag
+  const SHOW_CLEAR_BUTTON = false;
 
   useEffect(() => {
     const loadAnime = async () => {
@@ -80,6 +85,15 @@ export default function HomeScreen() {
     }
   };
 
+  const handleCopyLink = async (anime: Anime) => {
+    const shareUrl = `https://anime-recommendation-app.vercel.app/details?id=${anime.id}`;
+    const message = `Check out this anime: ${anime.title.romaji}! ${shareUrl}`;
+
+    Clipboard.setString(message);
+    setCopyPopupVisible(true);
+    setTimeout(() => setCopyPopupVisible(false), 2000);
+  };
+
   const renderItem: ListRenderItem<Anime> = ({ item }) => {
     const isFavorite = favorites.some((fav) => fav.id === item.id);
 
@@ -104,37 +118,51 @@ export default function HomeScreen() {
             </View>
           )}
           <Text style={styles.cardText} numberOfLines={2}>
-            {item.title.romaji ?? item.title.english ?? item.title.native ?? "Unknown"}
+            {item.title.romaji ??
+              item.title.english ??
+              item.title.native ??
+              "Unknown"}
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[
-            styles.favoriteButton,
-            isFavorite ? styles.removeFavoriteButton : styles.addFavoriteButton,
-          ]}
-          onPress={() => handleToggleFavorite(item.id)}
-          disabled={favoritesLoading}
-        >
-          <FontAwesome
-            name={isFavorite ? "heart" : "heart-o"}
-            size={16}
-            color={isFavorite ? "#fff" : "#ff6f61"}
-          />
-        </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.favoriteButton,
+              isFavorite
+                ? styles.removeFavoriteButton
+                : styles.addFavoriteButton,
+            ]}
+            onPress={() => handleToggleFavorite(item.id)}
+            disabled={favoritesLoading}
+          >
+            <FontAwesome
+              name={isFavorite ? "heart" : "heart-o"}
+              size={16}
+              color={isFavorite ? "#fff" : "#ff6f61"}
+            />
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() =>
-            addToWatchlist({
-              id: item.id,
-              title: item.title,
-              coverImage: item.coverImage,
-            })
-          }
-          style={styles.iconButton}
-        >
-          <Ionicons name="bookmark-outline" size={24} color="#007AFF" />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.copyButton}
+            onPress={() => handleCopyLink(item)}
+          >
+            <FontAwesome name="share-alt" size={16} color="#fff" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() =>
+              addToWatchlist({
+                id: item.id,
+                title: item.title,
+                coverImage: item.coverImage,
+              })
+            }
+            style={styles.iconButton}
+          >
+            <Ionicons name="bookmark" size={16} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
@@ -200,7 +228,9 @@ export default function HomeScreen() {
             alert("Storage has been cleared!");
           }}
         >
-          <Text style={{ color: "#fff", fontSize: 16 }}>Clear AsyncStorage</Text>
+          <Text style={{ color: "#fff", fontSize: 16 }}>
+            Clear AsyncStorage
+          </Text>
         </TouchableOpacity>
       )}
 
@@ -209,17 +239,53 @@ export default function HomeScreen() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
       />
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={copyPopupVisible}
+        onRequestClose={() => setCopyPopupVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.copyModal}>
+            <Text style={styles.copyModalText}>
+              Ready to share! Link copied! 💖
+            </Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
-  scrollContainer: { paddingTop: 50, paddingHorizontal: 20 },
-  pageTitle: { fontSize: 30, fontWeight: "bold", marginBottom: 10, textAlign: "left" },
-  header: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
-  horizontalList: { height: 370 },
-  cardWrapper: { marginRight: 10, alignItems: "center", width: 300 },
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+  scrollContainer: {
+    paddingTop: 50,
+    paddingHorizontal: 20,
+  },
+  pageTitle: {
+    fontSize: 30,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "left",
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  horizontalList: {
+    height: 370,
+  },
+  cardWrapper: {
+    marginRight: 10,
+    alignItems: "center",
+    width: 300,
+  },
   card: {
     backgroundColor: "#d2d3fa",
     padding: 20,
@@ -231,14 +297,44 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
   },
-  placeholderImage: { justifyContent: "center", alignItems: "center" },
-  placeholderText: { color: "#666", fontSize: 16 },
-  cardText: { fontSize: 18, fontWeight: "500", textAlign: "center", marginTop: 10 },
-  iconButton: { marginTop: 6 },
-  favoriteButton: {
+  placeholderImage: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  placeholderText: {
+    color: "#666",
+    fontSize: 16,
+  },
+  cardText: {
+    fontSize: 18,
+    fontWeight: "500",
+    textAlign: "center",
+    marginTop: 10,
+  },
+  iconButton: {
+    backgroundColor: "#4CAF50",
+    borderRadius: 20,
+    padding: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  addButton: {
+    fontSize: 14,
+    color: "#007AFF",
+    marginTop: 6,
+  },
+  buttonContainer: {
     position: "absolute",
+    display: "flex",
     top: 10,
     right: 10,
+    flexDirection: "row",
+    gap: 8,
+  },
+  favoriteButton: {
     backgroundColor: "#fff",
     borderRadius: 20,
     padding: 8,
@@ -248,9 +344,69 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 3,
   },
-  addFavoriteButton: { borderWidth: 2, borderColor: "#ff6f61" },
-  removeFavoriteButton: { backgroundColor: "#ff6f61" },
-  errorText: { color: "#ff4444", fontSize: 16, textAlign: "center", marginBottom: 20 },
+  copyButton: {
+    backgroundColor: "#007AFF",
+    borderRadius: 20,
+    padding: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  addFavoriteButton: {
+    borderWidth: 2,
+    borderColor: "#ff6f61",
+  },
+  removeFavoriteButton: {
+    backgroundColor: "#ff6f61",
+  },
+  copyPopup: {
+    position: "absolute",
+    top: 50,
+    backgroundColor: "#333",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  copyPopupText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  copyModal: {
+    backgroundColor: "#333",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  copyModalText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  errorText: {
+    color: "#ff4444",
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 20,
+  },
   noDataText: {
     fontSize: 16,
     color: "#888",
