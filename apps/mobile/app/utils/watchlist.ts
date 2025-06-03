@@ -21,7 +21,9 @@ export const addToWatchlist = async (anime: any) => {
   };
 
   // Check for duplicates safely
-  const exists = current.some((a: any) => Number(a.id) === Number(normalizedAnime.id));
+  const exists = current.some(
+    (a: any) => Number(a.id) === Number(normalizedAnime.id),
+  );
   if (!exists) {
     const updated = [...current, normalizedAnime];
     await AsyncStorage.removeItem(WATCHLIST_KEY); // Force clear before writing (safe for web)
@@ -40,7 +42,7 @@ export const removeFromWatchlist = async (id: number) => {
 export const updateStatus = async (id: number, newStatus: string) => {
   const current = await getWatchlist();
   const updated = current.map((a: any) =>
-    Number(a.id) === Number(id) ? { ...a, status: newStatus } : a
+    Number(a.id) === Number(id) ? { ...a, status: newStatus } : a,
   );
   await AsyncStorage.setItem(WATCHLIST_KEY, JSON.stringify(updated));
 };

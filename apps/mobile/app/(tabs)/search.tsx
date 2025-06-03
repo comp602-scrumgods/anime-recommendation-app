@@ -47,19 +47,19 @@ export default function SearchScreen() {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter((anime) =>
-        anime.title.toLowerCase().includes(q)
+        anime.title.toLowerCase().includes(q),
       );
     }
 
     if (yearFilter) {
       filtered = filtered.filter(
-        (anime) => anime.year.toString() === yearFilter
+        (anime) => anime.year.toString() === yearFilter,
       );
     }
 
     if (genreFilter) {
       filtered = filtered.filter((anime) =>
-        anime.genre.toLowerCase().includes(genreFilter.toLowerCase())
+        anime.genre.toLowerCase().includes(genreFilter.toLowerCase()),
       );
     }
 
