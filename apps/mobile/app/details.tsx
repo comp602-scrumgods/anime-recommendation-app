@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   TextInput,
   FlatList,
+  Modal, // Added Modal for share confirmation
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useNavigation } from "expo-router";
@@ -19,6 +20,7 @@ import { RootStackParamList } from "../types/navigation";
 import { NavigationProp } from "@react-navigation/native";
 import { auth } from "../firebase";
 import LoginPromptModal from "../components/Modals/LoginPromptModal";
+import Clipboard from "@react-native-clipboard/clipboard"; // Added Clipboard for sharing
 
 interface Anime {
   id: number;
@@ -51,6 +53,7 @@ export default function CommentsScreen() {
   const [showDescription, setShowDescription] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [copyPopupVisible, setCopyPopupVisible] = useState(false); // Added for share confirmation
   const [commentText, setCommentText] = useState<string>("");
 
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -138,6 +141,40 @@ export default function CommentsScreen() {
     }
   };
 
+  const handleShare = async () => {
+    if (!anime) return;
+
+    const shareUrl = `https://anime-recommendation-app.vercel.app/details?id=${anime.id}`;
+    const message = `Check out this anime: ${anime.title.romaji}! ${shareUrl}`;
+
+    try {
+      await Clipboard.setString(message);
+      setCopyPopupVisible(true);
+      setTimeout(() => setCopyPopupVisible(false), 2000);
+    } catch (error: any) {
+      console.error("Error copying link:", error.message);
+    }
+  };
+
+  const renderDescription = (description: string) => {
+    let processedText = description.replace(/<br\s*\/?>/g, "\n");
+
+    const parts = processedText.split(/(<b>.*?<\/b>)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith("<b>") && part.endsWith("</b>")) {
+        // Extract the text between <b> tags and render it bold
+        const boldText = part.replace(/<\/?b>/g, "");
+        return (
+          <Text key={index} style={{ fontWeight: "bold" }}>
+            {boldText}
+          </Text>
+        );
+      } else {
+        return <Text key={index}>{part}</Text>;
+      }
+    });
+  };
+
   if (animeLoading || favoritesLoading || commentsLoading) {
     return (
       <View style={styles.container}>
@@ -185,42 +222,59 @@ export default function CommentsScreen() {
         </Text>
       </View>
 
-      <TouchableOpacity
-        style={[
-          styles.favoriteButton,
-          isFavorite ? styles.removeFavoriteButton : styles.addFavoriteButton,
-        ]}
-        onPress={handleToggleFavorite}
+      <View
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: 16,
+          marginBottom: 8,
+        }}
       >
-        <FontAwesome
-          name={isFavorite ? "heart" : "heart-o"}
-          size={20}
-          color={isFavorite ? "#fff" : "#ff6f61"}
-          style={styles.favoriteIcon}
-        />
-        <Text
-          style={
-            styles.favoriteButtonText && {
-              color: isFavorite ? "#fff" : "#ff6f61",
-            }
-          }
+        <TouchableOpacity
+          style={[
+            styles.favoriteButton,
+            isFavorite ? styles.removeFavoriteButton : styles.addFavoriteButton,
+          ]}
+          onPress={handleToggleFavorite}
         >
-          {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
-        </Text>
-      </TouchableOpacity>
+          <FontAwesome
+            name={isFavorite ? "heart" : "heart-o"}
+            size={20}
+            color={isFavorite ? "#fff" : "#ff6f61"}
+            style={styles.favoriteIcon}
+          />
+          <Text
+            style={
+              styles.favoriteButtonText && {
+                color: isFavorite ? "#fff" : "#ff6f61",
+              }
+            }
+          >
+            {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+          </Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => setShowDescription(!showDescription)}
-      >
-        <Text style={styles.buttonText}>
-          {showDescription ? "Hide Description" : "Show Description"}
-        </Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => setShowDescription(!showDescription)}
+        >
+          <Text style={styles.buttonText}>
+            {showDescription ? "Hide Description" : "Show Description"}
+          </Text>
+        </TouchableOpacity>
 
-      {showDescription && (
-        <Text style={styles.description}>{anime.description}</Text>
-      )}
+        <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+          <FontAwesome
+            name="share-alt"
+            size={20}
+            color="#fff"
+            style={styles.shareIcon}
+          />
+          <Text style={styles.shareButtonText}>Share Anime</Text>
+        </TouchableOpacity>
+      </View>
+
+      {showDescription && renderDescription(anime.description)}
 
       <Text style={styles.subHeading}>Comments</Text>
 
@@ -235,9 +289,9 @@ export default function CommentsScreen() {
           multiline
           onSubmitEditing={
             auth.currentUser ? handleAddComment : () => setModalVisible(true)
-          } // Post on Enter
-          blurOnSubmit={false} // Keep keyboard open after submission
-          returnKeyType="done" // Show "Done" on the keyboard
+          }
+          blurOnSubmit={false}
+          returnKeyType="done"
         />
         {auth.currentUser ? (
           <TouchableOpacity
@@ -327,6 +381,20 @@ export default function CommentsScreen() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
       />
+
+      {/* Modal for "Anime link copied!" */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={copyPopupVisible}
+        onRequestClose={() => setCopyPopupVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.copyModal}>
+            <Text style={styles.copyModalText}>Anime link copied! Yay! 🎉</Text>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -381,9 +449,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 25,
     marginBottom: 20,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
-    shadowRadius: 5,
     elevation: 5,
   },
   addFavoriteButton: {
@@ -398,6 +463,29 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   favoriteButtonText: {
+    fontWeight: "600",
+    fontSize: 16,
+    textAlign: "center",
+  },
+  shareButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#2196f3",
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    marginBottom: 20,
+    shadowColor: "#2196f3",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  shareIcon: {
+    marginRight: 8,
+  },
+  shareButtonText: {
+    color: "#fff",
     fontWeight: "600",
     fontSize: 16,
     textAlign: "center",
@@ -568,5 +656,27 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     padding: 5,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  copyModal: {
+    backgroundColor: "#333",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  copyModalText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
   },
 });
