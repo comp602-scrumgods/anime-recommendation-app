@@ -103,7 +103,7 @@ const useAniListApi = () => {
         ];
         if (!params.sort.every((sort) => validSorts.includes(sort))) {
           throw new Error(
-            `Invalid sort value. Must be one of: ${validSorts.join(", ")}`
+            `Invalid sort value. Must be one of: ${validSorts.join(", ")}`,
           );
         }
         variables.sort = params.sort;

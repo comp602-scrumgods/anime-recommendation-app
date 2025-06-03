@@ -41,7 +41,7 @@ const useComments = () => {
     try {
       const commentsQuery = query(
         collection(db, "comments"),
-        where("animeId", "==", animeId)
+        where("animeId", "==", animeId),
       );
       const querySnapshot = await getDocs(commentsQuery);
       const fetchedComments: Comment[] = [];
@@ -62,7 +62,7 @@ const useComments = () => {
 
       fetchedComments.sort(
         (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
       );
 
       setComments(fetchedComments);
@@ -96,7 +96,7 @@ const useComments = () => {
 
       fetchedComments.sort(
         (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
       );
 
       setComments(fetchedComments);
@@ -110,7 +110,7 @@ const useComments = () => {
   const addComment = async (
     animeId: number,
     userEmail: string,
-    text: string
+    text: string,
   ) => {
     setError(null);
     try {
