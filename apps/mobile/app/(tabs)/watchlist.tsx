@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import {
   View,
   Text,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
+  FlatList,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -13,8 +13,15 @@ import {
   updateStatus,
 } from "../utils/watchlist";
 
+const TABS = [
+  { label: "Watching", value: "watching" },
+  { label: "Watched", value: "watched" },
+  { label: "Want to Watch", value: "wantToWatch" },
+];
+
 export default function WatchListScreen() {
   const [watchlist, setWatchlist] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("watching");
 
   const load = async () => {
     const list = await getWatchlist();
@@ -35,50 +42,64 @@ export default function WatchListScreen() {
     load();
   };
 
-  const renderSection = (title: string, status: string) => {
-    const sectionData = watchlist.filter((a) => a.status === status);
-    return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        {sectionData.length === 0 ? (
-          <Text style={styles.empty}>No anime.</Text>
-        ) : (
-          sectionData.map((anime, index) => (
-            <View key={index} style={styles.animeRow}>
-              <Text style={styles.animeTitle}>{anime.title.romaji}</Text>
-              <View style={styles.buttonRow}>
-                <TouchableOpacity onPress={() => handleRemove(anime.id)}>
-                  <Ionicons name="trash-outline" size={24} color="#ff4444" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => handleChangeStatus(anime.id, "watching")}
-                >
-                  <Text style={styles.statusButton}>Watching</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => handleChangeStatus(anime.id, "watched")}
-                >
-                  <Text style={styles.statusButton}>Watched</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => handleChangeStatus(anime.id, "wantToWatch")}
-                >
-                  <Text style={styles.statusButton}>Want to Watch</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
-        )}
-      </View>
-    );
-  };
+  const filteredList = watchlist.filter((a) => a.status === activeTab);
 
   return (
-    <ScrollView style={styles.container}>
-      {renderSection("Watching", "watching")}
-      {renderSection("Watched", "watched")}
-      {renderSection("Want to Watch", "wantToWatch")}
-    </ScrollView>
+    <View style={styles.container}>
+      {/* Tabs */}
+      <View style={styles.tabContainer}>
+        {TABS.map((tab) => (
+          <TouchableOpacity
+            key={tab.value}
+            style={[
+              styles.tab,
+              activeTab === tab.value && styles.activeTab,
+            ]}
+            onPress={() => setActiveTab(tab.value)}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === tab.value && styles.activeTabText,
+              ]}
+            >
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Content */}
+      <FlatList
+        data={filteredList}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        ListEmptyComponent={
+          <Text style={styles.empty}>No anime in this list.</Text>
+        }
+        renderItem={({ item }) => (
+          <View style={styles.animeRow}>
+            <Text style={styles.animeTitle}>{item.title.romaji}</Text>
+            <View style={styles.buttonRow}>
+              <TouchableOpacity onPress={() => handleRemove(item.id)}>
+                <Ionicons name="trash-outline" size={24} color="#ff4444" />
+              </TouchableOpacity>
+              {TABS.map(
+                (tab) =>
+                  tab.value !== activeTab && (
+                    <TouchableOpacity
+                      key={tab.value}
+                      onPress={() => handleChangeStatus(item.id, tab.value)}
+                    >
+                      <Text style={styles.statusButton}>{tab.label}</Text>
+                    </TouchableOpacity>
+                  )
+              )}
+            </View>
+          </View>
+        )}
+      />
+    </View>
   );
 }
 
@@ -89,11 +110,64 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingHorizontal: 20,
   },
-  section: { marginBottom: 30 },
-  sectionTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
-  empty: { fontSize: 14, color: "#888" },
-  animeRow: { marginBottom: 15 },
-  animeTitle: { fontSize: 16, fontWeight: "600" },
-  buttonRow: { flexDirection: "row", gap: 10, marginTop: 5 },
-  statusButton: { color: "#007AFF", fontSize: 12 },
+  tabContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderColor: "#ccc",
+  },
+  tab: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+  tabText: {
+    fontSize: 16,
+    color: "#888",
+  },
+  activeTab: {
+    borderBottomWidth: 3,
+    borderBottomColor: "#007AFF",
+  },
+  activeTabText: {
+    color: "#007AFF",
+    fontWeight: "bold",
+  },
+  animeRow: {
+    marginBottom: 20,
+    backgroundColor: "#f9f9f9",
+    padding: 15,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  animeTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 5,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 5,
+    alignItems: "center",
+  },
+  statusButton: {
+    color: "#007AFF",
+    fontSize: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: "#e6f0ff",
+    borderRadius: 5,
+    overflow: "hidden",
+  },
+  empty: {
+    textAlign: "center",
+    color: "#999",
+    marginTop: 20,
+    fontSize: 14,
+  },
 });
