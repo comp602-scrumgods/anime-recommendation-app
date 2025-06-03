@@ -110,8 +110,6 @@ const useAniListApi = () => {
       }
       if (params.id) variables.id = params.id;
 
-      console.log("Fetching anime with variables:", variables);
-
       const response = await axios.post("https://graphql.anilist.co", {
         query,
         variables,
