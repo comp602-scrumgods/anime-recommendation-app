@@ -23,7 +23,7 @@ const useAniListApi = () => {
         Page(page: 1, perPage: $perPage) {
           media(id: $id, search: $search, type: ANIME, startDate_greater: $year, genre: $genre, sort: $sort) {
             id
-            title { romaji }
+            title { romaji english native }  ### ✅ FULL FIX HERE
             coverImage { extraLarge medium large }
             popularity
             trending
@@ -39,7 +39,7 @@ const useAniListApi = () => {
                 nodes {
                   mediaRecommendation {
                     id
-                    title { romaji }
+                    title { romaji english native }
                     coverImage { extraLarge }
                   }
                 }

@@ -10,7 +10,7 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 import useAniListApi from "../../hooks/useAniListApi";
 import useFavorites from "../../hooks/useFavorites";
@@ -19,10 +19,11 @@ import { NavigationProp } from "@react-navigation/native";
 import { auth } from "../../firebase";
 import LoginPromptModal from "@/components/Modals/LoginPromptModal";
 import { addToWatchlist } from "../utils/watchlist";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // ✅ clear storage import
 
 interface Anime {
   id: number;
-  title: { romaji: string };
+  title: { romaji: string; english?: string; native?: string };
   coverImage?: { extraLarge: string };
   popularity: number;
   trending?: number;
@@ -45,6 +46,8 @@ export default function HomeScreen() {
     loading: favoritesLoading,
   } = useFavorites();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
+  const SHOW_CLEAR_BUTTON = false; // ✅ toggle flag
 
   useEffect(() => {
     const loadAnime = async () => {
@@ -81,7 +84,7 @@ export default function HomeScreen() {
     const isFavorite = favorites.some((fav) => fav.id === item.id);
 
     return (
-      <View style={[styles.cardWrapper]}>
+      <View style={styles.cardWrapper}>
         <TouchableOpacity
           onPress={() =>
             navigation.navigate("details", { id: item.id.toString() })
@@ -101,9 +104,10 @@ export default function HomeScreen() {
             </View>
           )}
           <Text style={styles.cardText} numberOfLines={2}>
-            {item.title.romaji}
+            {item.title.romaji ?? item.title.english ?? item.title.native ?? "Unknown"}
           </Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           style={[
             styles.favoriteButton,
@@ -118,8 +122,18 @@ export default function HomeScreen() {
             color={isFavorite ? "#fff" : "#ff6f61"}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => addToWatchlist(item)}>
-          <Text style={styles.addButton}>+ Add to Watchlist</Text>
+
+        <TouchableOpacity
+          onPress={() =>
+            addToWatchlist({
+              id: item.id,
+              title: item.title,
+              coverImage: item.coverImage,
+            })
+          }
+          style={styles.iconButton}
+        >
+          <Ionicons name="bookmark-outline" size={24} color="#007AFF" />
         </TouchableOpacity>
       </View>
     );
@@ -169,6 +183,27 @@ export default function HomeScreen() {
         )}
       </ScrollView>
 
+      {/* ✅ Conditionally render the clear storage button */}
+      {SHOW_CLEAR_BUTTON && (
+        <TouchableOpacity
+          style={{
+            marginTop: 20,
+            marginBottom: 40,
+            backgroundColor: "red",
+            padding: 15,
+            borderRadius: 10,
+            alignItems: "center",
+          }}
+          onPress={async () => {
+            await AsyncStorage.clear();
+            console.log("AsyncStorage cleared");
+            alert("Storage has been cleared!");
+          }}
+        >
+          <Text style={{ color: "#fff", fontSize: 16 }}>Clear AsyncStorage</Text>
+        </TouchableOpacity>
+      )}
+
       <LoginPromptModal
         text="Login to save your favourite anime"
         visible={modalVisible}
@@ -179,33 +214,12 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
-  scrollContainer: {
-    paddingTop: 50,
-    paddingHorizontal: 20,
-  },
-  pageTitle: {
-    fontSize: 30,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "left",
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  horizontalList: {
-    height: 370,
-  },
-  cardWrapper: {
-    marginRight: 10,
-    alignItems: "center",
-    width: 300,
-  },
+  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  scrollContainer: { paddingTop: 50, paddingHorizontal: 20 },
+  pageTitle: { fontSize: 30, fontWeight: "bold", marginBottom: 10, textAlign: "left" },
+  header: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
+  horizontalList: { height: 370 },
+  cardWrapper: { marginRight: 10, alignItems: "center", width: 300 },
   card: {
     backgroundColor: "#d2d3fa",
     padding: 20,
@@ -217,25 +231,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
   },
-  placeholderImage: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  placeholderText: {
-    color: "#666",
-    fontSize: 16,
-  },
-  cardText: {
-    fontSize: 18,
-    fontWeight: "500",
-    textAlign: "center",
-    marginTop: 10,
-  },
-  addButton: {
-    fontSize: 14,
-    color: "#007AFF",
-    marginTop: 6,
-  },
+  placeholderImage: { justifyContent: "center", alignItems: "center" },
+  placeholderText: { color: "#666", fontSize: 16 },
+  cardText: { fontSize: 18, fontWeight: "500", textAlign: "center", marginTop: 10 },
+  iconButton: { marginTop: 6 },
   favoriteButton: {
     position: "absolute",
     top: 10,
@@ -249,19 +248,9 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 3,
   },
-  addFavoriteButton: {
-    borderWidth: 2,
-    borderColor: "#ff6f61",
-  },
-  removeFavoriteButton: {
-    backgroundColor: "#ff6f61",
-  },
-  errorText: {
-    color: "#ff4444",
-    fontSize: 16,
-    textAlign: "center",
-    marginBottom: 20,
-  },
+  addFavoriteButton: { borderWidth: 2, borderColor: "#ff6f61" },
+  removeFavoriteButton: { backgroundColor: "#ff6f61" },
+  errorText: { color: "#ff4444", fontSize: 16, textAlign: "center", marginBottom: 20 },
   noDataText: {
     fontSize: 16,
     color: "#888",
