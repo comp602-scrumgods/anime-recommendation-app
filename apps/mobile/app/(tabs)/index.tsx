@@ -12,7 +12,7 @@ import {
   Alert,
   Modal,
 } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 import useAniListApi from "../../hooks/useAniListApi";
 import useFavorites from "../../hooks/useFavorites";
@@ -21,11 +21,12 @@ import { NavigationProp } from "@react-navigation/native";
 import { auth } from "../../firebase";
 import LoginPromptModal from "@/components/Modals/LoginPromptModal";
 import { addToWatchlist } from "../utils/watchlist";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // ✅ clear storage import
 import Clipboard from "@react-native-clipboard/clipboard";
 
 interface Anime {
   id: number;
-  title: { romaji: string };
+  title: { romaji: string; english?: string; native?: string };
   coverImage?: { extraLarge: string };
   popularity: number;
   trending?: number;
@@ -50,6 +51,8 @@ export default function HomeScreen() {
     loading: favoritesLoading,
   } = useFavorites();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
+  const SHOW_CLEAR_BUTTON = false;
 
   useEffect(() => {
     const loadAnime = async () => {
@@ -115,9 +118,13 @@ export default function HomeScreen() {
             </View>
           )}
           <Text style={styles.cardText} numberOfLines={2}>
-            {item.title.romaji}
+            {item.title.romaji ??
+              item.title.english ??
+              item.title.native ??
+              "Unknown"}
           </Text>
         </TouchableOpacity>
+
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[
@@ -135,16 +142,27 @@ export default function HomeScreen() {
               color={isFavorite ? "#fff" : "#ff6f61"}
             />
           </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.copyButton}
             onPress={() => handleCopyLink(item)}
           >
             <FontAwesome name="share-alt" size={16} color="#fff" />
           </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() =>
+              addToWatchlist({
+                id: item.id,
+                title: item.title,
+                coverImage: item.coverImage,
+              })
+            }
+            style={styles.iconButton}
+          >
+            <Ionicons name="bookmark" size={16} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={() => addToWatchlist(item)}>
-          <Text style={styles.addButton}>+ Add to Watchlist</Text>
-        </TouchableOpacity>
       </View>
     );
   };
@@ -192,6 +210,29 @@ export default function HomeScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* ✅ Conditionally render the clear storage button */}
+      {SHOW_CLEAR_BUTTON && (
+        <TouchableOpacity
+          style={{
+            marginTop: 20,
+            marginBottom: 40,
+            backgroundColor: "red",
+            padding: 15,
+            borderRadius: 10,
+            alignItems: "center",
+          }}
+          onPress={async () => {
+            await AsyncStorage.clear();
+            console.log("AsyncStorage cleared");
+            alert("Storage has been cleared!");
+          }}
+        >
+          <Text style={{ color: "#fff", fontSize: 16 }}>
+            Clear AsyncStorage
+          </Text>
+        </TouchableOpacity>
+      )}
 
       <LoginPromptModal
         text="Login to save your favourite anime"
@@ -270,6 +311,16 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 10,
   },
+  iconButton: {
+    backgroundColor: "#4CAF50",
+    borderRadius: 20,
+    padding: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
   addButton: {
     fontSize: 14,
     color: "#007AFF",
@@ -277,6 +328,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     position: "absolute",
+    display: "flex",
     top: 10,
     right: 10,
     flexDirection: "row",
@@ -293,7 +345,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   copyButton: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#007AFF",
     borderRadius: 20,
     padding: 8,
     shadowColor: "#000",
