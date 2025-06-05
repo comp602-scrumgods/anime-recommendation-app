@@ -5,6 +5,11 @@
   "scripts": {
     "dev:backend": "pnpm --filter backend dev",
     "dev:mobile:web": "pnpm --filter mobile web",
+    "build:mobile:web": "pnpm --filter mobile build",
     "format": "npx prettier --write \"**/*.{ts,tsx}\""
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.1.2",
+    "react-native-deck-swiper": "^2.0.17"
   }
 }

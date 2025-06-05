@@ -66,7 +66,7 @@ const useFavorites = () => {
         {
           animes: arrayUnion({ id: animeId, notes: "" }),
         },
-        { merge: true }
+        { merge: true },
       );
 
       setFavorites([...favorites, { ...animeData, notes: "" }]);
@@ -96,12 +96,12 @@ const useFavorites = () => {
   const updateNote = async (
     userEmail: string,
     animeId: number,
-    note: string
+    note: string,
   ) => {
     try {
       const userDocRef = doc(db, "favorites", userEmail);
       const updatedFavorites = favorites.map((anime) =>
-        anime.id === animeId ? { ...anime, notes: note } : anime
+        anime.id === animeId ? { ...anime, notes: note } : anime,
       );
 
       await updateDoc(userDocRef, {

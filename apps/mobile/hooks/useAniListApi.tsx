@@ -23,7 +23,7 @@ const useAniListApi = () => {
         Page(page: 1, perPage: $perPage) {
           media(id: $id, search: $search, type: ANIME, startDate_greater: $year, genre: $genre, sort: $sort) {
             id
-            title { romaji }
+            title { romaji english native }  ### ✅ FULL FIX HERE
             coverImage { extraLarge medium large }
             popularity
             trending
@@ -39,7 +39,7 @@ const useAniListApi = () => {
                 nodes {
                   mediaRecommendation {
                     id
-                    title { romaji }
+                    title { romaji english native }
                     coverImage { extraLarge }
                   }
                 }
@@ -103,14 +103,12 @@ const useAniListApi = () => {
         ];
         if (!params.sort.every((sort) => validSorts.includes(sort))) {
           throw new Error(
-            `Invalid sort value. Must be one of: ${validSorts.join(", ")}`
+            `Invalid sort value. Must be one of: ${validSorts.join(", ")}`,
           );
         }
         variables.sort = params.sort;
       }
       if (params.id) variables.id = params.id;
-
-      console.log("Fetching anime with variables:", variables);
 
       const response = await axios.post("https://graphql.anilist.co", {
         query,
