@@ -6,69 +6,83 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
+  Image,
+  TouchableOpacity,
+  ScrollView,
 } from "react-native";
-
-// Coded by Mengyang
-// This is a simple search screen for anime titles.
-// It fetches data from a local API and allows users to search by title, year, and genre.
+import { useNavigation } from "expo-router";
+import { NavigationProp } from "@react-navigation/native";
+import { RootStackParamList } from "../../types/navigation";
+import useAniListApi from "../../hooks/useAniListApi";
 
 interface Anime {
   id: number;
-  title: string;
-  year: number;
-  genre: string;
+  title: { romaji: string };
+  coverImage?: { extraLarge: string };
+  startDate?: { year?: number };
+  genres?: string[];
 }
 
+const genres = [
+  "Action", "Comedy", "Drama", "Fantasy", "Romance",
+  "Horror", "Sci-Fi", "Adventure", "Slice of Life", "Supernatural"
+];
+
 export default function SearchScreen() {
-  const [animeList, setAnimeList] = useState<Anime[]>([]);
-  const [filteredAnime, setFilteredAnime] = useState<Anime[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [yearFilter, setYearFilter] = useState("");
   const [genreFilter, setGenreFilter] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [animeList, setAnimeList] = useState<Anime[]>([]);
+  const { fetchAnimeByQuery, loading, error } = useAniListApi();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   useEffect(() => {
-    fetch("http://127.0.0.1:3000/animes")
-      .then((res) => res.json())
-      .then((data: Anime[]) => {
-        setAnimeList(data);
-        setFilteredAnime(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("API error:", err);
-        setLoading(false);
+    const fetchData = async () => {
+      const year = yearFilter ? parseInt(yearFilter) : undefined;
+      const genre = genreFilter || undefined;
+      const query = searchQuery || undefined;
+
+      const data = await fetchAnimeByQuery({
+        search: query,
+        year,
+        genre,
+        sort: ["POPULARITY_DESC"],
       });
-  }, []);
 
-  useEffect(() => {
-    let filtered = animeList;
+      setAnimeList(data);
+    };
 
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter((anime) =>
-        anime.title.toLowerCase().includes(q),
-      );
-    }
-
-    if (yearFilter) {
-      filtered = filtered.filter(
-        (anime) => anime.year.toString() === yearFilter,
-      );
-    }
-
-    if (genreFilter) {
-      filtered = filtered.filter((anime) =>
-        anime.genre.toLowerCase().includes(genreFilter.toLowerCase()),
-      );
-    }
-
-    setFilteredAnime(filtered);
+    fetchData();
   }, [searchQuery, yearFilter, genreFilter]);
 
+  const renderItem = ({ item }: { item: Anime }) => (
+    <TouchableOpacity
+      style={styles.cardWrapper}
+      onPress={() => navigation.navigate("details", { id: item.id.toString() })}
+    >
+      {item.coverImage?.extraLarge ? (
+        <Image
+          source={{ uri: item.coverImage.extraLarge }}
+          style={styles.card}
+        />
+      ) : (
+        <View style={[styles.card, styles.placeholderImage]}>
+          <Text style={styles.placeholderText}>No Image</Text>
+        </View>
+      )}
+      <Text style={styles.cardText} numberOfLines={2}>
+        {item.title.romaji}
+      </Text>
+      <Text style={styles.metaText}>
+        {item.startDate?.year || "Unknown Year"} |{" "}
+        {item.genres?.join(", ") || "No Genre"}
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>🔍 Search Anime</Text>
+    <ScrollView style={styles.container}>
+      <Text style={styles.header}>🔎 Search Anime</Text>
       <TextInput
         style={styles.input}
         placeholder="Search by title"
@@ -77,32 +91,51 @@ export default function SearchScreen() {
       />
       <TextInput
         style={styles.input}
-        placeholder="Filter by year (e.g., 2023)"
+        placeholder="Filter by year (e.g., 2025)"
         value={yearFilter}
         onChangeText={setYearFilter}
         keyboardType="numeric"
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Filter by genre (e.g., Action)"
-        value={genreFilter}
-        onChangeText={setGenreFilter}
-      />
+
+      <View style={styles.genreButtons}>
+        {genres.map((genre) => (
+          <TouchableOpacity
+            key={genre}
+            style={[
+              styles.genreButton,
+              genreFilter === genre && styles.genreButtonActive,
+            ]}
+            onPress={() => setGenreFilter(genreFilter === genre ? "" : genre)}
+          >
+            <Text
+              style={[
+                styles.genreButtonText,
+                genreFilter === genre && styles.genreButtonTextActive,
+              ]}
+            >
+              {genre}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       {loading ? (
         <ActivityIndicator size="large" />
+      ) : error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : animeList.length === 0 ? (
+        <Text style={styles.noDataText}>No results found.</Text>
       ) : (
         <FlatList
-          data={filteredAnime}
+          data={animeList}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <Text style={styles.item}>
-              • {item.title} ({item.year}) – {item.genre}
-            </Text>
-          )}
+          renderItem={renderItem}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingVertical: 20 }}
         />
       )}
-    </View>
+    </ScrollView>
   );
 }
 
@@ -114,9 +147,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   header: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 20,
   },
   input: {
     borderWidth: 1,
@@ -125,8 +158,73 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 8,
   },
-  item: {
+  genreButtons: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginVertical: 10,
+    gap: 8,
+  },
+  genreButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: "#eee",
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  genreButtonActive: {
+    backgroundColor: "#ff6f61",
+  },
+  genreButtonText: {
+    fontSize: 14,
+    color: "#333",
+  },
+  genreButtonTextActive: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  cardWrapper: {
+    marginRight: 12,
+    width: 300,
+    alignItems: "center",
+  },
+  card: {
+    backgroundColor: "#eee",
+    borderRadius: 10,
+    width: 300,
+    height: 300,
+    marginBottom: 8,
+    resizeMode: "cover",
+  },
+  placeholderImage: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  placeholderText: {
+    color: "#666",
     fontSize: 16,
-    marginVertical: 6,
+  },
+  cardText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  metaText: {
+    fontSize: 14,
+    color: "#777",
+    textAlign: "center",
+  },
+  errorText: {
+    color: "#ff4444",
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 20,
+  },
+  noDataText: {
+    fontSize: 16,
+    color: "#888",
+    textAlign: "center",
+    marginTop: 20,
+    fontStyle: "italic",
   },
 });

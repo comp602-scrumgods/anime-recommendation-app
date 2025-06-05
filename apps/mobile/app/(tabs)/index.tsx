@@ -35,6 +35,7 @@ interface Anime {
 export default function HomeScreen() {
   const [trendingAnime, setTrendingAnime] = useState<Anime[]>([]);
   const [popularAnime, setPopularAnime] = useState<Anime[]>([]);
+  const [upcomingAnime, setUpcomingAnime] = useState<Anime[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [copyPopupVisible, setCopyPopupVisible] = useState(false);
 
@@ -58,6 +59,11 @@ export default function HomeScreen() {
     const loadAnime = async () => {
       const trending = await fetchAnimeByQuery({ sort: ["TRENDING_DESC"] });
       const popular = await fetchAnimeByQuery({ sort: ["POPULARITY_DESC"] });
+      const upcoming = await fetchAnimeByQuery({
+        sort: ["START_DATE"],
+        status: "NOT_YET_RELEASED"
+      });
+      setUpcomingAnime(upcoming);
       setTrendingAnime(trending);
       setPopularAnime(popular);
 
@@ -203,6 +209,25 @@ export default function HomeScreen() {
             <FlatList
               data={popularAnime}
               keyExtractor={(item) => `popular-${item.id}`}
+              renderItem={renderItem}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            />
+          </View>
+        )}
+
+        <Text style={styles.header}>⏳ Upcoming</Text>
+        {animeLoading || favoritesLoading ? (
+          <ActivityIndicator size="large" color="#000" />
+        ) : animeError ? (
+          <Text style={styles.errorText}>{animeError}</Text>
+        ) : upcomingAnime.length === 0 ? (
+          <Text style={styles.noDataText}>No upcoming anime found.</Text>
+        ) : (
+          <View style={styles.horizontalList}>
+            <FlatList
+              data={upcomingAnime}
+              keyExtractor={(item) => `upcoming-${item.id}`}
               renderItem={renderItem}
               horizontal
               showsHorizontalScrollIndicator={false}
