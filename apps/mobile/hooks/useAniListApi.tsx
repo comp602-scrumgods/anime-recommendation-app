@@ -7,6 +7,7 @@ interface FetchAnimeParams {
   genre?: string;
   sort?: string[];
   id?: number;
+  status?: string;
   includeRecommendations?: boolean;
 }
 
@@ -19,9 +20,9 @@ const useAniListApi = () => {
     setError(null);
 
     const query = `
-      query ($sort: [MediaSort], $perPage: Int, $id: Int, $search: String, $year: FuzzyDateInt, $genre: String) {
+      query ($sort: [MediaSort], $perPage: Int, $id: Int, $search: String, $year: FuzzyDateInt, $genre: String, $status: MediaStatus) {
         Page(page: 1, perPage: $perPage) {
-          media(id: $id, search: $search, type: ANIME, startDate_greater: $year, genre: $genre, sort: $sort) {
+          media(id: $id, search: $search, type: ANIME, startDate_greater: $year, genre: $genre, sort: $sort, status: $status) {
             id
             title { romaji english native }  ### ✅ FULL FIX HERE
             coverImage { extraLarge medium large }
@@ -109,6 +110,9 @@ const useAniListApi = () => {
         variables.sort = params.sort;
       }
       if (params.id) variables.id = params.id;
+      if (params.status) {
+        variables.status = params.status;
+      }
 
       const response = await axios.post("https://graphql.anilist.co", {
         query,
