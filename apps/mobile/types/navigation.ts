@@ -4,7 +4,6 @@ export type RootStackParamList = {
   index: undefined;
   search: undefined;
   details: { id: string };
-  explore: undefined;
   favourites: undefined;
   auth: undefined;
 };

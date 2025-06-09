@@ -122,7 +122,7 @@ export default function CommentsScreen() {
     const success = await addComment(
       parseInt(id!),
       auth.currentUser.email!,
-      commentText,
+      commentText
     );
     if (success) {
       setCommentText("");
@@ -144,7 +144,7 @@ export default function CommentsScreen() {
   const handleShare = async () => {
     if (!anime) return;
 
-    const shareUrl = `https://anime-recommendation-app.vercel.app/details?id=${anime.id}`;
+    const shareUrl = `http://localhost:8081/details?id=${anime.id}`;
     const message = `Check out this anime: ${anime.title.romaji}! ${shareUrl}`;
 
     try {
