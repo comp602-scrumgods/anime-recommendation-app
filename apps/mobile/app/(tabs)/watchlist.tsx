@@ -51,10 +51,7 @@ export default function WatchListScreen() {
         {TABS.map((tab) => (
           <TouchableOpacity
             key={tab.value}
-            style={[
-              styles.tab,
-              activeTab === tab.value && styles.activeTab,
-            ]}
+            style={[styles.tab, activeTab === tab.value && styles.activeTab]}
             onPress={() => setActiveTab(tab.value)}
           >
             <Text
@@ -93,7 +90,7 @@ export default function WatchListScreen() {
                     >
                       <Text style={styles.statusButton}>{tab.label}</Text>
                     </TouchableOpacity>
-                  )
+                  ),
               )}
             </View>
           </View>

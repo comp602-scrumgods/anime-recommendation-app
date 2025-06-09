@@ -122,7 +122,7 @@ export default function CommentsScreen() {
     const success = await addComment(
       parseInt(id!),
       auth.currentUser.email!,
-      commentText
+      commentText,
     );
     if (success) {
       setCommentText("");

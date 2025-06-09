@@ -61,7 +61,7 @@ export default function HomeScreen() {
       const popular = await fetchAnimeByQuery({ sort: ["POPULARITY_DESC"] });
       const upcoming = await fetchAnimeByQuery({
         sort: ["START_DATE"],
-        status: "NOT_YET_RELEASED"
+        status: "NOT_YET_RELEASED",
       });
       setUpcomingAnime(upcoming);
       setTrendingAnime(trending);

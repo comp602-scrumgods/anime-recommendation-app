@@ -24,8 +24,16 @@ interface Anime {
 }
 
 const genres = [
-  "Action", "Comedy", "Drama", "Fantasy", "Romance",
-  "Horror", "Sci-Fi", "Adventure", "Slice of Life", "Supernatural"
+  "Action",
+  "Comedy",
+  "Drama",
+  "Fantasy",
+  "Romance",
+  "Horror",
+  "Sci-Fi",
+  "Adventure",
+  "Slice of Life",
+  "Supernatural",
 ];
 
 export default function SearchScreen() {
