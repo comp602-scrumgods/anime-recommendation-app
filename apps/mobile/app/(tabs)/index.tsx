@@ -86,7 +86,7 @@ export default function HomeScreen() {
   };
 
   const handleCopyLink = async (anime: Anime) => {
-    const shareUrl = `https://anime-recommendation-app.vercel.app/details?id=${anime.id}`;
+    const shareUrl = `http://localhost:8081/details?id=${anime.id}`;
     const message = `Check out this anime: ${anime.title.romaji}! ${shareUrl}`;
 
     Clipboard.setString(message);
